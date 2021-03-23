@@ -1,3 +1,4 @@
+//Task 1.2 convert csv file to json 
 const csv=require('csvtojson');
 const fs = require('fs');
 

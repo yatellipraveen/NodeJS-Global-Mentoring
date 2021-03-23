@@ -10,6 +10,7 @@
     "task2_linebyline": "nodemon task2/csvtojson_linebyline.js",
     "task3": "nodemon --exec babel-node task3_babel.js"
   },
+  
   "author": "",
   "license": "ISC",
   "devDependencies": {

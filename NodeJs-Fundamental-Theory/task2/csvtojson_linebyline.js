@@ -1,3 +1,4 @@
+//Task 1.2 Do not load entire csv file into ram
 const csv = require('csvtojson');
 const fs = require('fs');
 const pipeline  = require('stream');
