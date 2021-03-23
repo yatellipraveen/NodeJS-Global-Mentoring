@@ -1,14 +1,14 @@
-const csv = require('csvtojson');
-const fs = require('fs');
-const pipeline  = require('stream');
+import { csv } from 'csvtojson';
+import { createReadStream , createWriteStream } from 'fs';
+import { pipeline } from 'stream';
 
 const inputPath = 'task2/inputcsv/inputfile.csv';
 const outputPath = 'task2/outputtxt/output_linebyline.txt';
 
-const readstream = fs.createReadStream(inputPath);
-const writeStream = fs.createWriteStream(outputPath);
+const readstream = createReadStream(inputPath);
+const writeStream = createWriteStream(outputPath);
 
-pipeline.pipeline(
+pipeline(
     readstream,
     csv(),
     writeStream,
