@@ -8,6 +8,7 @@ import { User } from '../../models/user.model';
 import Container from 'typedi';
 import UserService from '../../services/users.service';
 import UserGroupService from '../../services/userGroup.service';
+import { winstonLogger } from '../../config/winston.config'
 
 
 const validator = createValidator();
@@ -46,72 +47,116 @@ const createUserGroupSchema = Joi.object({
 
 export const router = Router();
 
-router.get('/autoSuggestedUsers/', async (req , res ) => {
+router.get('/autoSuggestedUsers/', (req , res , next ) => {
     const loginSubstring = req.query.loginSubstring?.toString().toLowerCase() ? req.query.loginSubstring?.toString().toLowerCase() : '' ;
     const limit = req.query.limit ? parseInt(req.query.limit.toString()) : undefined;
-    const users = await userServiceInstance.getautoSuggestedUsers(loginSubstring , limit);
-    res.send(users);
+    userServiceInstance.getautoSuggestedUsers(loginSubstring , limit)
+    .then(users => res.send(users))
+    .catch(err => {
+      winstonLogger.error("method : %s , arguments passed : %s , error : %s", 'getautoSuggestedUsers', [loginSubstring , limit].join(' ') , err);
+      next(err)
+    })
 });
 
-router.delete('/removeuser', async (req , res ) =>{
+router.delete('/removeuser', (req , res , next ) =>{
   const userId = req.query.id?.toString();
-  const user = await userServiceInstance.deleteUser(userId);
-  res.send(user);
+  userServiceInstance.deleteUser(userId)
+  .then(([rows, updatedUser]) => res.send(updatedUser))
+  .catch(err => {
+    winstonLogger.error("method : %s , arguments passed : %s , error : %s", 'deleteUser', userId , err);
+    next(err)
+  })
 });
 
-router.get('/user', async (req , res ) =>{
+router.get('/user', (req , res, next ) =>{
   const userId = req.query.id?.toString();
-  const user = await userServiceInstance.getUser( userId );
-  res.send(user);
+  userServiceInstance.getUser( userId )
+  .then(users => res.send(users))
+  .catch(err => {
+    winstonLogger.error("method : %s , arguments passed : %s , error : %s", 'getUser', userId , err);
+    next(err)
+  })
   }
 );
 
-router.put('/update',validator.body(updateSchema,joiConfig), async (req, res ) =>{
+router.put('/update',validator.body(updateSchema,joiConfig), (req, res , next ) =>{
   const user : User = req.body;
-  const updatedUser = await userServiceInstance.updateUser(user); 
-  res.send(updatedUser);
+  userServiceInstance.updateUser(user)
+  .then(([rows, updatedUser]) => res.send(updatedUser))
+  .catch(err => {
+    winstonLogger.error("method : %s , arguments passed : %s , error : %s", 'updateUser', user , err);
+    next(err)
+  }); 
 });
 
-router.post('/create', validator.body(createSchema,joiConfig), async (req , res ) =>{
+router.post('/create', validator.body(createSchema,joiConfig), (req , res , next ) =>{
   const user : User = req.body;
-  const createdUser = await userServiceInstance.createUser(user);
-  res.send(createdUser);
+  userServiceInstance.createUser(user)
+  .then(createdUser => res.send(createdUser))
+  .catch(err => {
+    winstonLogger.error("method : %s , arguments passed : %s , error : %s", 'creteUser', user , err);
+    next(err)
+  });
 });
 
-router.post('/createGroup', validator.body(createGroupSchema,joiConfig), async (req, res) =>{
+router.post('/createGroup', validator.body(createGroupSchema,joiConfig), (req, res , next) =>{
   const group = req.body;
-  const createdGroup = await groupServiceInstance.createGroup(group);
-  res.send(createdGroup);
+  groupServiceInstance.createGroup(group)
+  .then(group => res.send(group))
+  .catch(err => {
+    winstonLogger.error("method : %s , arguments passed : %s , error : %s", 'createGroup', group , err);
+    next(err)
+  })
 });
 
-router.put('/updateGroup',validator.body(updateGroupSchema,joiConfig), async (req, res ) =>{
+router.put('/updateGroup',validator.body(updateGroupSchema,joiConfig), (req, res , next) =>{
   const group = req.body;
-  const updatedUserGroup = await groupServiceInstance.updateGroup(group); 
-  res.send(updatedUserGroup);
+  groupServiceInstance.updateGroup(group)
+  .then(([rows, updatedGroup]) => res.send(updatedGroup))
+  .catch(err => {
+    winstonLogger.error("method : %s , arguments passed : %s , error : %s", 'updateGroup', group , err);
+    next(err)
+  })
 });
 
-router.get('/group', async (req , res ) =>{
+router.get('/group', (req , res, next ) =>{
   const groupId = req.query.id?.toString();
-  const group = await groupServiceInstance.getGroup( groupId );
-  res.send(group);
+  groupServiceInstance.getGroup( groupId )
+  .then(group => res.send(group))
+  .catch(err => {
+    winstonLogger.error("method : %s , arguments passed : %s , error : %s", 'getGroup', groupId , err);
+    next(err)
+  })
   }
 );
 
-router.get('/getAllGroups', async (req , res ) =>{
-  const groups = await groupServiceInstance.getAllGroups();
-  res.send(groups);
+router.get('/getAllGroups', (req , res, next ) =>{
+  groupServiceInstance.getAllGroups()
+  .then(usergroup => res.send(usergroup))
+  .catch(err => {
+    winstonLogger.error("method : %s , arguments passed : %s , error : %s", 'getAllGroups', '' , err);
+    next(err)
+  })
   }
 );
 
-router.delete('/deleteGroup', async (req , res ) =>{
+router.delete('/deleteGroup', (req , res, next ) =>{
   const groupId = req.query.id?.toString();
-  const user = await groupServiceInstance.deleteGroup(groupId);
-  res.send(user);
+  groupServiceInstance.deleteGroup(groupId)
+  .then((rows) =>  res.send(true))
+  .catch(err => {
+    winstonLogger.error("method : %s , arguments passed : %s , error : %s", 'deleteGroup', groupId , err);
+    next(err)
+  })
 });
 
-router.post('/addUserGroup', validator.body(createUserGroupSchema,joiConfig), async (req, res) =>{
+router.post('/addUserGroup', validator.body(createUserGroupSchema,joiConfig), (req, res , next) =>{
   const userId = req.body.userId;
   const groupId = req.body.groupId;
-  const createdGroup = await groupServiceInstance.addUserGroup(userId,groupId);
-  res.send(createdGroup);
+  groupServiceInstance.addUserGroup(userId,groupId)
+  .then(userGroup => res.send(userGroup))
+  .catch(err => {
+    winstonLogger.error("method : %s , arguments passed : %s , error : %s", 'addUserGroup', [userId , groupId].join(' ') , err);
+    next(err)
+  })
 })

@@ -1,0 +1,17 @@
+error: method : creteUser , arguments passed : {
+  age: 23,
+  login: 'kutumba',
+  password: '123',
+  isDeleted: false,
+  id: '0750dc34-a070-485b-a429-66e0fa1db3ce'
+} , error : DatabaseError [SequelizeDatabaseError]: relation "usersses" does not exist
+    at Query.formatError (F:\Workspace\Epam\NodeJs-Global-Mentoring\NodeJS-Global-Mentoring\PostgreSQL\node_modules\sequelize\lib\dialects\postgres\query.js:386:16)
+    at Query.run (F:\Workspace\Epam\NodeJs-Global-Mentoring\NodeJS-Global-Mentoring\PostgreSQL\node_modules\sequelize\lib\dialects\postgres\query.js:87:18)
+    at processTicksAndRejections (internal/process/task_queues.js:93:5) {
+  name: 'SequelizeDatabaseError',
+  parent: [DatabaseError],
+  original: [DatabaseError],
+  sql: 'INSERT INTO "usersses" ("age","id","login","password","isDeleted") VALUES ($1,$2,$3,$4,$5) RETURNING "age","id","login","password","isDeleted";',
+  parameters: [Array]
+}
+error: relation "usersses" does not exist {"name":"SequelizeDatabaseError","parent":{"length":170,"name":"error","severity":"ERROR","code":"42P01","position":"13","file":"d:\\pginstaller_13.auto\\postgres.windows-x64\\src\\backend\\parser\\parse_relation.c","line":"1376","routine":"parserOpenTable","sql":"INSERT INTO \"usersses\" (\"age\",\"id\",\"login\",\"password\",\"isDeleted\") VALUES ($1,$2,$3,$4,$5) RETURNING \"age\",\"id\",\"login\",\"password\",\"isDeleted\";","parameters":[23,"0750dc34-a070-485b-a429-66e0fa1db3ce","kutumba","123",false]},"original":{"length":170,"name":"error","severity":"ERROR","code":"42P01","position":"13","file":"d:\\pginstaller_13.auto\\postgres.windows-x64\\src\\backend\\parser\\parse_relation.c","line":"1376","routine":"parserOpenTable","sql":"INSERT INTO \"usersses\" (\"age\",\"id\",\"login\",\"password\",\"isDeleted\") VALUES ($1,$2,$3,$4,$5) RETURNING \"age\",\"id\",\"login\",\"password\",\"isDeleted\";","parameters":[23,"0750dc34-a070-485b-a429-66e0fa1db3ce","kutumba","123",false]},"sql":"INSERT INTO \"usersses\" (\"age\",\"id\",\"login\",\"password\",\"isDeleted\") VALUES ($1,$2,$3,$4,$5) RETURNING \"age\",\"id\",\"login\",\"password\",\"isDeleted\";","parameters":[23,"0750dc34-a070-485b-a429-66e0fa1db3ce","kutumba","123",false]}
