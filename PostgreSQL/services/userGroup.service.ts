@@ -17,39 +17,27 @@ export default class UserGroupService {
 
     async deleteGroup( groupId : string | undefined){
       return Groups.destroy( { where : { id : groupId} })
-      .then((rows) =>  true)
-      .catch(err => false)
     }
 
     async getGroup( groupId : string | undefined){
       return Groups.findByPk(groupId)
-      .then(group =>group)
-      .catch(err => err)
     }
 
     async getAllGroups(){
-        return Groups.findAll()
-        .then(usergroup =>usergroup)
-        .catch(err => err)
+      return Groups.findAll()
     }
 
     async updateGroup ( group : Group ){
       return Groups.update(group, { where : { id : group.id} , returning : true})
-      .then(([rows, updatedGroup]) => updatedGroup)
-      .catch(err => err)
     }
 
     async createGroup (group : Group){
-        group.id = uuidv4();
+      group.id = uuidv4();
       return Groups.create(group)
-      .then(group => group)
-      .catch(err => err)
     }
 
     async addUserGroup ( userId : string , groupId : string){
       return UserGroups.create({ 'id': uuidv4(), 'userId' : userId , 'groupId': groupId})
-      .then(userGroup => userGroup)
-      .catch(err => err)
     }
 
 }
