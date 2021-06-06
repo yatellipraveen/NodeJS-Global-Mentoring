@@ -27,5 +27,9 @@ export default class UserService {
       user.id = uuidv4();
       return Users.create(user)
     }
+
+    async findUser ( username : string , password : string){
+      return Users.findOne({where : { login : username , password : password}});
+    }
 }
 

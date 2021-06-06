@@ -5,6 +5,7 @@ import { db } from './config/postgre.config';
 import { router } from './api/routes/api';
 import { logger } from './middleware/logger'
 import { winstonLogger } from './config/winston.config';
+import cors from 'cors'
 
 db.authenticate()
 .then(()=> console.log("DB Connected..."))
@@ -17,6 +18,7 @@ const port = 3000;
 app.use(express.json());
 
 app.use(logger);
+app.use(cors())
 
 app.use('/api', router)
 
