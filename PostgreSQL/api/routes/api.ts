@@ -8,8 +8,9 @@ import { User } from '../../models/user.model';
 import Container from 'typedi';
 import UserService from '../../services/users.service';
 import UserGroupService from '../../services/userGroup.service';
-import { winstonLogger } from '../../config/winston.config'
-
+import { winstonLogger } from '../../config/winston.config';
+import * as jwt from 'jsonwebtoken';
+import { validateJwt, privateKey } from '../../middleware/jwtValidator'
 
 const validator = createValidator();
 const joiConfig = { joi: {convert: true, allowUnknown: true }};
@@ -45,9 +46,14 @@ const createUserGroupSchema = Joi.object({
   groupId : Joi.string().required()
 });
 
+const loginSchema = Joi.object({
+  username : Joi.string().required(),
+  password : Joi.string().required()
+});
+
 export const router = Router();
 
-router.get('/autoSuggestedUsers/', (req , res , next ) => {
+router.get('/autoSuggestedUsers/', validateJwt, (req , res , next ) => {
     const loginSubstring = req.query.loginSubstring?.toString().toLowerCase() ? req.query.loginSubstring?.toString().toLowerCase() : '' ;
     const limit = req.query.limit ? parseInt(req.query.limit.toString()) : undefined;
     userServiceInstance.getautoSuggestedUsers(loginSubstring , limit)
@@ -58,7 +64,7 @@ router.get('/autoSuggestedUsers/', (req , res , next ) => {
     })
 });
 
-router.delete('/removeuser', (req , res , next ) =>{
+router.delete('/removeuser',validateJwt, (req , res , next ) =>{
   const userId = req.query.id?.toString();
   userServiceInstance.deleteUser(userId)
   .then(([rows, updatedUser]) => res.send(updatedUser))
@@ -68,7 +74,7 @@ router.delete('/removeuser', (req , res , next ) =>{
   })
 });
 
-router.get('/user', (req , res, next ) =>{
+router.get('/user',validateJwt, (req , res, next ) =>{
   const userId = req.query.id?.toString();
   userServiceInstance.getUser( userId )
   .then(users => res.send(users))
@@ -79,7 +85,7 @@ router.get('/user', (req , res, next ) =>{
   }
 );
 
-router.put('/update',validator.body(updateSchema,joiConfig), (req, res , next ) =>{
+router.put('/update',validateJwt, validator.body(updateSchema,joiConfig), (req, res , next ) =>{
   const user : User = req.body;
   userServiceInstance.updateUser(user)
   .then(([rows, updatedUser]) => res.send(updatedUser))
@@ -89,7 +95,7 @@ router.put('/update',validator.body(updateSchema,joiConfig), (req, res , next ) 
   }); 
 });
 
-router.post('/create', validator.body(createSchema,joiConfig), (req , res , next ) =>{
+router.post('/create',validateJwt, validator.body(createSchema,joiConfig), (req , res , next ) =>{
   const user : User = req.body;
   userServiceInstance.createUser(user)
   .then(createdUser => res.send(createdUser))
@@ -99,7 +105,7 @@ router.post('/create', validator.body(createSchema,joiConfig), (req , res , next
   });
 });
 
-router.post('/createGroup', validator.body(createGroupSchema,joiConfig), (req, res , next) =>{
+router.post('/createGroup',validateJwt, validator.body(createGroupSchema,joiConfig), (req, res , next) =>{
   const group = req.body;
   groupServiceInstance.createGroup(group)
   .then(group => res.send(group))
@@ -109,7 +115,7 @@ router.post('/createGroup', validator.body(createGroupSchema,joiConfig), (req, r
   })
 });
 
-router.put('/updateGroup',validator.body(updateGroupSchema,joiConfig), (req, res , next) =>{
+router.put('/updateGroup',validateJwt, validator.body(updateGroupSchema,joiConfig), (req, res , next) =>{
   const group = req.body;
   groupServiceInstance.updateGroup(group)
   .then(([rows, updatedGroup]) => res.send(updatedGroup))
@@ -119,7 +125,7 @@ router.put('/updateGroup',validator.body(updateGroupSchema,joiConfig), (req, res
   })
 });
 
-router.get('/group', (req , res, next ) =>{
+router.get('/group',validateJwt, (req , res, next ) =>{
   const groupId = req.query.id?.toString();
   groupServiceInstance.getGroup( groupId )
   .then(group => res.send(group))
@@ -130,7 +136,7 @@ router.get('/group', (req , res, next ) =>{
   }
 );
 
-router.get('/getAllGroups', (req , res, next ) =>{
+router.get('/getAllGroups',validateJwt, (req , res, next ) =>{
   groupServiceInstance.getAllGroups()
   .then(usergroup => res.send(usergroup))
   .catch(err => {
@@ -140,7 +146,7 @@ router.get('/getAllGroups', (req , res, next ) =>{
   }
 );
 
-router.delete('/deleteGroup', (req , res, next ) =>{
+router.delete('/deleteGroup',validateJwt, (req , res, next ) =>{
   const groupId = req.query.id?.toString();
   groupServiceInstance.deleteGroup(groupId)
   .then((rows) =>  res.send(true))
@@ -150,7 +156,7 @@ router.delete('/deleteGroup', (req , res, next ) =>{
   })
 });
 
-router.post('/addUserGroup', validator.body(createUserGroupSchema,joiConfig), (req, res , next) =>{
+router.post('/addUserGroup',validateJwt, validator.body(createUserGroupSchema,joiConfig), (req, res , next) =>{
   const userId = req.body.userId;
   const groupId = req.body.groupId;
   groupServiceInstance.addUserGroup(userId,groupId)
@@ -159,4 +165,21 @@ router.post('/addUserGroup', validator.body(createUserGroupSchema,joiConfig), (r
     winstonLogger.error("method : %s , arguments passed : %s , error : %s", 'addUserGroup', [userId , groupId].join(' ') , err);
     next(err)
   })
-})
+});
+
+router.post('/login', validator.body(loginSchema,joiConfig), (req, res, next) => {
+  const username = req.body.username;
+  const password = req.body.password;
+  userServiceInstance.findUser(username , password)
+  .then(user => {
+    if(user){
+      const token = jwt.sign({ username: username }, privateKey, { expiresIn: 120 });
+      res.send(token);
+    }
+    else res.send("User Invalid");
+  })
+  .catch(err => {
+    winstonLogger.error("method : %s , arguments passed : %s , error : %s", 'login', [username , password].join(' ') , err);
+    next(err)
+  })
+});
